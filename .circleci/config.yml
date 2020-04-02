@@ -8,7 +8,9 @@ jobs:
       - run:
           name: Build Artifact
           command: |
-            cd Lambda && sudo apt install maven
+            cd Lambda
+            sudo apt-get update
+            sudo apt-get install maven
             pwd
             mvn package -DskipTests
             cd target
