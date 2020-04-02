@@ -66,16 +66,18 @@ public class SendEmail implements RequestHandler<SNSEvent, Object> {
                     .withItem(new Item().withString("id", username)
                             .withString("Token", token).withLong("TTL", expirationTime)));
 
-            this.body = "Hi, \n" + "\nPlease find below the due bill links: \n";
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append("Hi, \n" + "\nPlease find below the due bill links:");
             logger.log("Before" + billMessage);
             String[] bills = billMessage.split(",");
             for (int i = 1; i < bills.length; i++) {
                 logger.log("Appending in loop" + bills[i]);
-                body.concat(bills[i] + "\n");
+                stringBuilder.append("\n");
+                stringBuilder.append(bills[i]);
             }
 
-            body.concat("\nRegards,\nSarthak");
-
+            stringBuilder.append("\nRegards,\nSarthak");
+            this.body = stringBuilder.toString();
 
             try {
                 Content subject = new Content().withData(emailSubject);
