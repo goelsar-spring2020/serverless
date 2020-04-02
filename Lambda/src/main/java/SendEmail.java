@@ -13,7 +13,6 @@ import com.amazonaws.services.simpleemail.AmazonSimpleEmailServiceClientBuilder;
 import com.amazonaws.services.simpleemail.model.*;
 
 import java.time.Instant;
-import java.util.UUID;
 
 public class SendEmail implements RequestHandler<SNSEvent, Object> {
 
@@ -33,8 +32,10 @@ public class SendEmail implements RequestHandler<SNSEvent, Object> {
     @Override
     public Object handleRequest(SNSEvent request, Context context) {
 
+        //Initializing Logger for Lambda
         LambdaLogger logger = context.getLogger();
 
+        //Check if SNS request is null
         if (request.getRecords() == null) {
             logger.log("No records found!");
             return null;
@@ -48,7 +49,6 @@ public class SendEmail implements RequestHandler<SNSEvent, Object> {
         //Function Execution for extracting the message & user email
         String billMessage = "";
         billMessage = request.getRecords().get(0).getSNS().getMessage();
-        String token = UUID.randomUUID().toString();
         String sample = billMessage;
         userName = sample.split(",")[0];
 
@@ -57,27 +57,32 @@ public class SendEmail implements RequestHandler<SNSEvent, Object> {
         logger.log("Email Address of User: " + userName);
         this.initDynamoDbClient();
 
+        //Retrieving the current item
         Item item = this.dynamoDB.getTable(tableName).getItem("id", userName);
 
         if (item == null || (item != null && Long.parseLong(item.get("TTL").toString()) < Instant.now().getEpochSecond())) {
             this.dynamoDB.getTable(tableName).putItem(new PutItemSpec()
                     .withItem(new Item().withString("id", userName)
-                            .withString("Token", token).withLong("TTL", expirationTime)));
+                            .withLong("TTL", expirationTime)));
 
             StringBuilder stringBuilder = new StringBuilder();
+
+            //Creation of email body
             stringBuilder.append("Hi, \n" + "\nPlease find below the due bill links:");
 
             logger.log("Request Message" + billMessage);
             String[] bills = billMessage.split(",");
 
+            //Getting all the bill id from the request
             for (int i = 1; i < bills.length; i++) {
                 stringBuilder.append("\n");
                 stringBuilder.append(bills[i]);
             }
 
+            //Creating the signature for email body
             stringBuilder.append("\nRegards,\nSarthak");
             this.body = stringBuilder.toString();
-            logger.log("Assigning Body"+this.body);
+            logger.log("Assigning Body" + this.body);
 
             try {
                 Content subject = new Content().withData(emailSubject);
@@ -85,12 +90,15 @@ public class SendEmail implements RequestHandler<SNSEvent, Object> {
                 Body body = new Body().withText(textbody);
                 Message message = new Message().withSubject(subject).withBody(body);
 
+                // Creating email request
                 SendEmailRequest emailRequest = new SendEmailRequest()
                         .withDestination(new Destination().withToAddresses(userName)).withMessage(message).withSource(from);
 
+                // Creating SES Client
                 AmazonSimpleEmailService client = AmazonSimpleEmailServiceClientBuilder.standard()
                         .withRegion(Regions.US_EAST_1).build();
 
+                //Sending email via Amazon SES
                 client.sendEmail(emailRequest);
                 logger.log("Email sent successfully!");
             } catch (Exception ex) {
