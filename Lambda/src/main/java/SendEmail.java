@@ -61,7 +61,7 @@ public class SendEmail implements RequestHandler<SNSEvent, Object> {
 
         Item item = this.dynamo.getTable(TABLE_NAME).getItem("id", username);
 
-        if (item == null || (item != null && Long.parseLong(item.get("TTL").toString()) > Instant.now().getEpochSecond())) {
+        if (item == null || (item != null && Long.parseLong(item.get("TTL").toString()) < Instant.now().getEpochSecond())) {
             this.dynamo.getTable(TABLE_NAME).putItem(new PutItemSpec()
                     .withItem(new Item().withString("id", username)
                             .withString("Token", token).withLong("TTL", expirationTime)));
