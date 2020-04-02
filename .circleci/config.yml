@@ -2,15 +2,14 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/openjdk:8-jdk
+      - image: circleci/openjdk:8-jdk-stretch
     steps:
       - checkout
       - run:
           name: Build Artifact
           command: |
-            cd Lambda
+            cd Lambda && sudo apt install maven
             pwd
-            sudo apt install maven
             mvn package -DskipTests
             cd target
             ls -al
@@ -19,7 +18,7 @@ jobs:
       - run:
           name: Zip Artifact
           command: |
-            echo "Hello the current build number is ${CIRCLE_BUILD_NUM}"
+            echo "Current build number is ${CIRCLE_BUILD_NUM}"
             pwd
             ls -al
             mkdir -p lambda_artifact
