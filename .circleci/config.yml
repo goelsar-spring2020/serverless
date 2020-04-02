@@ -1,0 +1,57 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/openjdk:8-jdk
+    steps:
+      - checkout
+      - run:
+          name: Build Artifact
+          command: |
+            cd Lambda
+            pwd
+            sudo apt install maven
+            mvn package -DskipTests
+            cd target
+            ls -al
+            cd ..
+            pwd
+      - run:
+          name: Zip Artifact
+          command: |
+            echo "Hello the current build number is ${CIRCLE_BUILD_NUM}"
+            pwd
+            ls -al
+            mkdir -p lambda_artifact
+            pwd
+            ls -al
+            mv Lambda/target/Lambda-1.0-SNAPSHOT.jar lambda_artifact/
+            
+            ls -al
+            cd lambda_artifact
+            ls -al
+            pwd
+            cd ..
+            pwd
+            ls -al
+      - run:
+          name: Install AWS CLI & Build Artifact
+          command: |
+            sudo apt-get update || sudo apt-get update
+            sudo apt-get install python3
+            python3 --version
+            sudo apt install python3-pip
+            pip3 --version
+            sudo pip3 install awscli
+      - run:
+          name: Upload Lambda Artifact to S3
+          command: |
+            cd lambda_artifact
+            aws s3 cp Lambda-1.0-SNAPSHOT.jar s3://${bucketName}
+      - run:
+          name: AWS Lambda Update Function Code
+          command: |
+            echo "Hello AWS Lambda Update Function Code"
+            aws lambda update-function-code --function-name MyLambdaFunction --region ${AWS_REGION} \
+            --zip-file fileb://./lambda_artifact/Lambda-1.0-SNAPSHOT.jar
+            echo "code deployment complete"
