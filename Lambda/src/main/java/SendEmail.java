@@ -26,9 +26,9 @@ public class SendEmail implements RequestHandler<SNSEvent, Object> {
     static String userName;
 
     //Calculation of Time To Live(TTL)
-    int SECONDS_IN_60_MINUTES = 60 * 60;
+    long bufferPeriod = 60 * 60;
     long secondsSinceEpoch = Instant.now().getEpochSecond();
-    long expirationTime = secondsSinceEpoch + SECONDS_IN_60_MINUTES;
+    long expirationTime = secondsSinceEpoch + bufferPeriod;
 
     @Override
     public Object handleRequest(SNSEvent request, Context context) {
