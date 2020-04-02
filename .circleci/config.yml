@@ -53,6 +53,6 @@ jobs:
           name: AWS Lambda Update Function Code
           command: |
             echo "Hello AWS Lambda Update Function Code"
-            aws lambda update-function-code --function-name MyLambdaFunction --region ${AWS_REGION} \
+            aws lambda update-function-code --function-name EmailOnSNS --region ${AWS_REGION} \
             --zip-file fileb://./lambda_artifact/Lambda-1.0-SNAPSHOT.jar
             echo "code deployment complete"
