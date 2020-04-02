@@ -61,15 +61,17 @@ public class SendEmail implements RequestHandler<SNSEvent, Object> {
 
         Item item = this.dynamo.getTable(TABLE_NAME).getItem("id", username);
 
-        if (item == null || (item != null && Long.parseLong(item.get("TTL").toString()) < Instant.now().getEpochSecond())) {
+        if (item == null || (item != null && Long.parseLong(item.get("TTL").toString()) > Instant.now().getEpochSecond())) {
             this.dynamo.getTable(TABLE_NAME).putItem(new PutItemSpec()
                     .withItem(new Item().withString("id", username)
                             .withString("Token", token).withLong("TTL", expirationTime)));
 
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append("Hi, \n" + "\nPlease find below the due bill links:");
+
             logger.log("Before" + billMessage);
             String[] bills = billMessage.split(",");
+
             for (int i = 1; i < bills.length; i++) {
                 logger.log("Appending in loop" + bills[i]);
                 stringBuilder.append("\n");
@@ -77,7 +79,9 @@ public class SendEmail implements RequestHandler<SNSEvent, Object> {
             }
 
             stringBuilder.append("\nRegards,\nSarthak");
+            logger.log("Assigning Body");
             this.body = stringBuilder.toString();
+            logger.log("Assigning Body"+this.body);
 
             try {
                 Content subject = new Content().withData(emailSubject);
