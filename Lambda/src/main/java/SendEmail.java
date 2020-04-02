@@ -49,7 +49,6 @@ public class SendEmail implements RequestHandler<SNSEvent, Object> {
         //Function Execution for extracting the message & user email
         String billMessage = "";
         billMessage = request.getRecords().get(0).getSNS().getMessage();
-        logger.log("Subscribed Message from SNS" + billMessage);
         String token = UUID.randomUUID().toString();
         String sample = billMessage;
         username = sample.split(",")[0];
@@ -73,13 +72,11 @@ public class SendEmail implements RequestHandler<SNSEvent, Object> {
             String[] bills = billMessage.split(",");
 
             for (int i = 1; i < bills.length; i++) {
-                logger.log("Appending in loop" + bills[i]);
                 stringBuilder.append("\n");
                 stringBuilder.append(bills[i]);
             }
 
             stringBuilder.append("\nRegards,\nSarthak");
-            logger.log("Assigning Body");
             this.body = stringBuilder.toString();
             logger.log("Assigning Body"+this.body);
 
